@@ -9,14 +9,14 @@ router = APIRouter(
 )
 
 
-@router.get("/",status_code=status.HTTP_200_OK, response_model=List[posts_models.post])
+@router.get("/",status_code=status.HTTP_200_OK, response_model=List[posts_models.Post])
 def get_posts():
     return posts.get_all()
-@router.get("/latest", status_code=status.HTTP_200_OK, response_model=List[posts_models.post])
+@router.get("/latest", status_code=status.HTTP_200_OK, response_model=List[posts_models.Post])
 def get_latest_posts():
     return posts.get_latest()
 
-@router.get("/{post_id}", status_code=status.HTTP_200_OK, response_model=posts_models.postfull)
+@router.get("/{post_id}", status_code=status.HTTP_200_OK, response_model=posts_models.PostFull)
 def get_post_by_id(post_id: int):
     return posts.get_byid(post_id)
 

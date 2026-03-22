@@ -1,7 +1,2 @@
-from pydantic import BaseModel
-
-class post(BaseModel):
-    title: str
-    content: str
-    subreddit: str
-    user: str
+from src.pydantic_models.posts_models import Post
+# Removed duplicate 'post' class—use Post from posts_models.py
