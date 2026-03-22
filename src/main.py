@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from src.routes.posts import posts
+from src.routes.user import user
 from src.services import authservice as auth
 
 
@@ -11,6 +12,7 @@ app = FastAPI(title="Reddit API",
             version="1.0.0")
 
 app.include_router(posts.router)
+app.include_router(user.router)
 
 
 
