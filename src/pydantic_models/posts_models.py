@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, time
 
 class post(BaseModel):
     title: str
@@ -10,4 +10,4 @@ class post(BaseModel):
 
 class postfull(post):
     post_id: int
-    created_at: datetime
+    created_at: time

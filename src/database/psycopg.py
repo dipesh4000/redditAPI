@@ -7,9 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def fetch_all(cursor):
-    return [dict(row) for row in cursor.fetchall()]
-
 # Access the variables using os.getenv()
 DB_HOST = os.getenv("DATABASE_HOSTNAME")
 DB_NAME = os.getenv("DATABASE_NAME")
