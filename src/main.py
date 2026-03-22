@@ -1,5 +1,10 @@
 from fastapi import FastAPI
-from src.posts import posts
+from src.routes.posts import posts
+from src.services import authservice as auth
+
+
+
+
 
 app = FastAPI(title="Reddit API", 
             description="A simple API for Reddit",
@@ -14,9 +19,9 @@ def homepage():
     return {"message": "Welcome to Reddit!", "quote": "The heart of the Internet", "status": "success"}
 
 @app.get("/signup")
-def create_new_user():
-    return "user created"
+async def create_new_user():
+    return await auth.create_new()
 
 @app.get("/login")
-def user_login():
-    return "Succesfuly logged in"
+async def user_login():
+    return await auth.verify_user()

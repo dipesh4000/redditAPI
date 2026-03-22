@@ -9,5 +9,5 @@ class post(BaseModel):
 
 
 class postfull(post):
-    id: int
+    post_id: int
     created_at: datetime
