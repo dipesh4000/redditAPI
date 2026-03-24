@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from src.routes.posts import posts
 from src.routes.user import user
 from src.services import authservice as auth
+from src.services import posts_service as posts_service
 
 app = FastAPI(title="Reddit API", 
               description="A simple API for Reddit",
@@ -12,7 +13,7 @@ app.include_router(user.router)
 
 @app.get("/")
 def homepage():
-    return {"message": "Welcome to Reddit!", "quote": "The heart of the Internet", "status": "success"}
+    return posts_service.get_all()
 
 @app.get("/signup")
 def create_new_user():  # Removed async/await to fix runtime error
