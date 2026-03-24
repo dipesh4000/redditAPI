@@ -1,10 +1,7 @@
-from sqlalchemy import Null
-
 from src.database import psycopg
 from fastapi import HTTPException, status
 from typing import List
 from src.pydantic_models.posts_models import Post, PostFull
-from src.routes.posts.posts import get_post_by_id
 
 cursor = psycopg.cursor
 conn = psycopg.conn
