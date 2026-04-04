@@ -1,25 +1,25 @@
-# Moved create_post to posts_service.py for better separation
-# Add user-related functions here later (e.g., for OAuth2)
-
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
-from . import schemas, models
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-from .database import get_db
-from sqlalchemy.orm import Session
-from .config import settings
+import os
+from dotenv import load_dotenv
+from src.services import user_service
+from src.database import psycopg
 
+# Load environment variables from .env file
+load_dotenv()
+cursor = psycopg.cursor
+conn = psycopg.conn
+
+
+# Access the variables using os.getenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login") 
 #this tokenUrl="login" means that whenever we use the "Depends(oauth2_scheme)" it will go to the login endpoint and take the token from there
-
-
-
-SECRET_KEY = settings.secret_key
-ALGORITHM = settings.algorithm
-ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
-
 def create_access_token(data: dict):
     to_encode = data.copy()
 
@@ -38,19 +38,25 @@ def verify_access_token(token: str, credentials_exception):
         id: int = payload.get("user_id")
         if id is None:
             raise credentials_exception
-        token_data = schemas.TokenData(id=id)
+        token_data = user_service.TokenData(id=id)
     
     except JWTError:
         raise credentials_exception
 
     return token_data
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)): #it is going to verify that the verify_acess_token's user
+def get_current_user(token: str = Depends(oauth2_scheme)): #it is going to verify that the verify_acess_token's user
     credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail=f"Could not validate credentials, bro", headers={"WWW-Authenticate": "Bearer"})   
-    
-    token_data = verify_access_token(token, credentials_exception)
-    user = db.query(models.User).filter(models.User.id == token_data.id).first()
-    if user is None:
-        raise credentials_exception
-    return user
+                            detail=f"Could not validate credentials, bro", headers={"WWW-Authenticate": "Bearer"})  
+    try:
+        token_data = verify_access_token(token, credentials_exception)
+        cursor.execute("""SELECT * from users WHERE user_id = %s """, (token_data.id,))
+        user = cursor.fetchone()
+        if user is None:
+            raise credentials_exception
+        return user
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"DB error: {str(e)}")
