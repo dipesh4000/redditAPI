@@ -1,2 +1,9 @@
-from src.pydantic_models.posts_models import Post
-# Removed duplicate 'post' class—use Post from posts_models.py
+from pydantic import BaseModel, EmailStr
+from datetime import datetime, time
+from typing import Optional
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    email: EmailStr
+

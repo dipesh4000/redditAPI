@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Response, status, HTTPException
+from fastapi import APIRouter, status, HTTPException
 from src.pydantic_models import posts_models as posts_models
 from src.services import posts_service as posts_service
-from typing import List, Optional
+from typing import List
 
 router = APIRouter(
     prefix="/r",

@@ -28,26 +28,6 @@ def update(post_id: int, body: posts.PostUpdate):
 def delete(post_id: int):
     return posts_service.delete_post(post_id)
 
-@router.post("/signup", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-
-    hashed_password = utils.hash(user.password)
-    
-    new_user = models.User(email=user.email, password=hashed_password)
-    db.add(new_user)
-    
-    try:
-        db.commit()
-        db.refresh(new_user)
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-
-    return new_user
-
 
 @router.get('/{id}', response_model=schemas.UserOut)
 def get_user(id: int, db: Session = Depends(get_db), ):
