@@ -5,7 +5,7 @@ from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from src.services import user_service
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 def hash(password: str):
     return pwd_context.hash(password)
 
@@ -17,7 +17,7 @@ cursor = psycopg.cursor
 conn = psycopg.conn
 
 def create_user(user: users_models.UserCreate):
-
+    print(user)
     hashed_password = hash(user.password)
     try:
         cursor.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s) RETURNING * """,

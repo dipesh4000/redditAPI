@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from src.routes.posts import posts
 from src.routes.user import user
-from src.services import authservice as authservice
-from src.services import posts_service as posts_service
+from src.services import authservice, posts_service
+from src.pydantic_models import users_models
+
 
 app = FastAPI(title="Reddit API", 
               description="A simple API for Reddit",
@@ -15,10 +16,11 @@ app.include_router(user.router)
 def homepage():
     return posts_service.get_all()
 
-@app.get("/signup")
-def create_new_user():  # Removed async/await to fix runtime error
-    return authservice.create_user()
+@app.post("/signup")
+def create_new_user(user: users_models.UserCreate):
+    print(user)  # Removed async/await to fix runtime error
+    return authservice.create_user(user)
 
-@app.get("/login")
+@app.post("/login")
 def user_login():  # Removed async/await to fix runtime error
-    return authservice.verify_user()
+    return authservice.verify_user(user)
