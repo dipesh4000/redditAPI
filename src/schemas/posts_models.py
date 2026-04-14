@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from datetime import datetime, time
 from typing import Optional
 
+
 class Post(BaseModel):
     title: str
     content: str
@@ -11,10 +12,10 @@ class Post(BaseModel):
 class PostFull(Post):
     post_id: int
     created_at: time
+    user: str
 
 
 class PostUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
     subreddit: Optional[str] = None
-    user: Optional[str] = None

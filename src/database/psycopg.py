@@ -1,30 +1,28 @@
 import psycopg2
+from psycopg2.pool import ThreadedConnectionPool
 from psycopg2.extras import RealDictCursor
-import os
-from dotenv import load_dotenv
+from src.config import settings
+import logging
 
-# Load environment variables from .env file
-load_dotenv()
+logger = logging.getLogger(__name__)
 
+pool = ThreadedConnectionPool(
+    minconn=1,
+    maxconn=10,
+    host=settings.database_hostname,
+    database=settings.database_name,
+    user=settings.database_username,
+    password=settings.database_password,
+    port=settings.database_port,
+    cursor_factory=RealDictCursor,
+)
 
-# Access the variables using os.getenv()
-DB_HOST = os.getenv("DATABASE_HOSTNAME")
-DB_NAME = os.getenv("DATABASE_NAME")
-DB_USER = os.getenv("DATABASE_USERNAME")
-DB_PASS = os.getenv("DATABASE_PASSWORD")
-DB_PORT = os.getenv("DATABASE_PORT")
-
-try:
-    conn = psycopg2.connect(host=DB_HOST,
-                            database=DB_NAME,
-                            user=DB_USER,
-                            password=DB_PASS,
-                            port=DB_PORT,
-                            cursor_factory=RealDictCursor)
-    cursor = conn.cursor()
-    print("Database Connected Successfully")
-except Exception as error:
-    print("Database not connected")
-    print("Error: ", error)
+logger.info("Database connection pool created successfully")
 
 
+def get_connection():
+    return pool.getconn()
+
+
+def release_connection(conn):
+    pool.putconn(conn)

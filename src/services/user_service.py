@@ -1,60 +1,51 @@
-from jose import JWTError, jwt
+import jwt
 from datetime import datetime, timedelta, timezone
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
-import os
-from dotenv import load_dotenv
-from src.pydantic_models.users_models import TokenData
+from src.config import settings
+from src.schemas.users_models import TokenData
 from src.database import psycopg
 
-# Load environment variables from .env file
-load_dotenv()
-cursor = psycopg.cursor
-conn = psycopg.conn
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-# Access the variables using os.getenv()
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login") 
-#this tokenUrl="login" means that whenever we use the "Depends(oauth2_scheme)" it will go to the login endpoint and take the token from there
-def create_access_token(data: dict):
+def create_access_token(data: dict) -> str:
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=int(ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
 
-def verify_access_token(token: str, credentials_exception):
+def verify_access_token(token: str, credentials_exception) -> TokenData:
     try:
-        print("Token received: ", token)
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print("Payload")
-        id: int = payload.get("user_id")
-        if id is None:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        user_id: int = payload.get("user_id")
+        if user_id is None:
             raise credentials_exception
-        token_data = TokenData(id=id)    
-    except JWTError:
+        return TokenData(id=user_id)
+    except jwt.PyJWTError:
         raise credentials_exception
 
-    return token_data
-#"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NzYxNTIxNTl9.6uc2RJ3-H4B-WhiU94IoYCK5YXvneudR67UFXEwY1hI"
 
-def get_current_user(token: str = Depends(oauth2_scheme)): #it is going to verify that the verify_acess_token's user
-    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail=f"Could not validate credentials, bro", headers={"WWW-Authenticate": "Bearer"})  
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    token_data = verify_access_token(token, credentials_exception)
+
+    conn = psycopg.get_connection()
     try:
-        token_data = verify_access_token(token, credentials_exception)
-        cursor.execute("""SELECT * from users WHERE user_id = %s """, (token_data.id,))
-        user = cursor.fetchone()
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM users WHERE user_id = %s", (token_data.id,))
+            user = cursor.fetchone()
         if user is None:
             raise credentials_exception
         return user
-        
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"DB error: {str(e)}")
+    finally:
+        psycopg.release_connection(conn)
