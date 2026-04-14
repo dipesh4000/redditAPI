@@ -2,32 +2,51 @@
 
 A Reddit-like REST API built with FastAPI and PostgreSQL.
 
+## Overview
+
+This project provides a simple API for posts and users, including signup/login, JWT authentication, and owner-protected post updates and deletes. The backend uses raw SQL with `psycopg2` and a connection pool.
+
 ## Features
 
-- Browse and search posts by subreddit or ID
-- Create, update, and delete posts
-- User signup and login with JWT authentication
+- Create and retrieve posts
+- List latest posts
+- List posts by username
+- Create, update, and delete posts as an authenticated user
+- User signup and login with JWT tokens
 - Password hashing with Argon2
-- Protected routes — only the post owner can update or delete their posts
+- Owner-only authorization for post edits/deletes
+
+## Project Structure
+
+- `src/main.py` — app initialization, CORS setup, router registration, root endpoints
+- `src/config.py` — environment-backed settings with `pydantic-settings`
+- `src/database/psycopg.py` — PostgreSQL connection pool
+- `src/routes/posts/posts.py` — post-related public endpoints
+- `src/routes/user/user.py` — user-related and authenticated post endpoints
+- `src/schemas/posts_models.py` — Pydantic models for post requests/responses
+- `src/schemas/users_models.py` — Pydantic models for user auth and tokens
+- `src/services/authservice.py` — user registration and login logic
+- `src/services/posts_service.py` — database operations for posts
+- `src/services/user_service.py` — JWT creation and bearer auth dependency
 
 ## Tech Stack
 
 - **FastAPI** — web framework
-- **PostgreSQL** + **psycopg2** — database
-- **python-jose** — JWT tokens
+- **PostgreSQL** + **psycopg2** — database access
+- **PyJWT** — JWT token creation and verification
 - **passlib[argon2]** — password hashing
-- **pydantic** — request/response validation
-- **uvicorn** — ASGI server
+- **pydantic** / **pydantic-settings** — validation and environment loading
+- **uvicorn** — development server
 
 ## Setup
 
-1. Clone the repo and install dependencies:
+1. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-2. Create a `.env` file:
-   ```
+2. Create a `.env` file in the project root with:
+   ```env
    SECRET_KEY=<your_secret_key>
    ALGORITHM=HS256
    ACCESS_TOKEN_EXPIRE_MINUTES=30
@@ -43,28 +62,34 @@ A Reddit-like REST API built with FastAPI and PostgreSQL.
    uvicorn src.main:app --reload
    ```
 
-## Authentication
-
-Protected routes require a Bearer token in the `Authorization` header:
-```
-Authorization: Bearer <access_token>
-```
-Obtain the token from `POST /login`.
-
 ## API Endpoints
 
 | Method | Endpoint | Auth Required | Description |
-|--------|----------|:---:|-------------|
+|---|---|:---:|---|
+| GET | `/health` | No | Health check |
 | GET | `/` | No | Get all posts |
 | POST | `/signup` | No | Register a new user |
 | POST | `/login` | No | Login and receive JWT token |
-| GET | `/r/latest` | No | Get 10 latest posts |
-| GET | `/r/{post_id}` | No | Get post by ID |
-| GET | `/u/{username}` | No | Get all posts by a user |
-| POST | `/u/post` | Yes | Create a post |
-| PUT | `/u/update/{post_id}` | Yes | Update a post (owner only) |
-| DELETE | `/u/delete/{post_id}` | Yes | Delete a post (owner only) |
+| GET | `/posts/` | No | Get all posts |
+| GET | `/posts/latest` | No | Get latest posts |
+| GET | `/posts/{post_id}` | No | Get a post by ID |
+| GET | `/users/{username}/posts` | No | Get posts by username |
+| POST | `/users/posts` | Yes | Create a new post |
+| PUT | `/users/posts/{post_id}` | Yes | Update a post (owner only) |
+| DELETE | `/users/posts/{post_id}` | Yes | Delete a post (owner only) |
 
-> `PUT` and `DELETE` return `403 Forbidden` if the authenticated user is not the post owner.
+## Authentication
 
-Interactive docs available at `/docs` after running the server.
+Protected routes require a Bearer token in the `Authorization` header:
+
+```http
+Authorization: Bearer <access_token>
+```
+
+Obtain the token by logging in via `POST /login`.
+
+## Notes
+
+- The app currently uses open CORS (`*`) for development.
+- `src/database/session.py` and `src/models/models.py` are present as placeholders and are not used by the current SQL-based implementation.
+- Interactive API docs are available at `/docs` once the server is running.
