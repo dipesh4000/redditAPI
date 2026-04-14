@@ -21,6 +21,6 @@ def create_new_user(user: users_models.UserCreate):
     print(user)  # Removed async/await to fix runtime error
     return authservice.create_user(user)
 
-@app.post("/login")
-def user_login():  # Removed async/await to fix runtime error
+@app.post("/login", response_model=users_models.Token)
+def user_login(user):  # Removed async/await to fix runtime error
     return authservice.verify_user(user)

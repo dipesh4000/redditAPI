@@ -17,7 +17,6 @@ cursor = psycopg.cursor
 conn = psycopg.conn
 
 def create_user(user: users_models.UserCreate):
-    print(user)
     hashed_password = hash(user.password)
     try:
         cursor.execute("""INSERT INTO users (username, password, email) VALUES (%s, %s, %s) RETURNING * """,
@@ -35,7 +34,7 @@ def verify_user(user_credentials: OAuth2PasswordRequestForm = Depends()):
         cursor.execute("""SELECT * from users WHERE username = %s """, (user_credentials.username,))
         user = cursor.fetchone()
         if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
         if not verify(user_credentials.password, user.password):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials")
 
