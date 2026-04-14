@@ -35,15 +35,15 @@ def verify_user(user_credentials: OAuth2PasswordRequestForm = Depends()):
         user = cursor.fetchone()
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
-        if not verify(user_credentials.password, user.password):
+        if not verify(user_credentials.password, user['password']):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials")
 
-        access_token = user_service.create_access_token(data={"user_id": user.user_id})
+        access_token = user_service.create_access_token(data={"user_id": user['password']})
 
         return {"access_token": access_token, "token_type": "bearer"}
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"DB error: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"DB error Exception: {str(e)}")
 
     
