@@ -1,7 +1,8 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Depends
 from src.services import posts_service as posts_service
 from src.pydantic_models import posts_models as posts
 from src.database import psycopg
+from src.services.user_service import get_current_user
 
 
 router = APIRouter(
@@ -19,16 +20,16 @@ def get_posts():
 
 
 @router.post("/post", status_code=status.HTTP_201_CREATED, response_model=posts.PostFull)
-def post(body: posts.Post):
-    return posts_service.create_post(body)
+def post(body: posts.Post, current_user=Depends(get_current_user)):
+    return posts_service.create_post(body, current_user)
 
 @router.put("/update/{post_id}", status_code=status.HTTP_200_OK, response_model=posts.PostFull)
-def update(post_id: int, body: posts.PostUpdate):
-    return posts_service.update_post(post_id, body)
+def update(post_id: int, body: posts.PostUpdate, current_user=Depends(get_current_user)):
+    return posts_service.update_post(post_id, body, current_user)
 
 @router.delete("/delete/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete(post_id: int):
-    return posts_service.delete_post(post_id)
+def delete(post_id: int, current_user=Depends(get_current_user)):
+    return posts_service.delete_post(post_id, current_user)
 
 cursor = psycopg.cursor
 conn = psycopg.conn

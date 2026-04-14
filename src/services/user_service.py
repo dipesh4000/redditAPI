@@ -4,7 +4,7 @@ from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 import os
 from dotenv import load_dotenv
-from src.services import user_service
+from src.pydantic_models.users_models import TokenData
 from src.database import psycopg
 
 # Load environment variables from .env file
@@ -30,13 +30,11 @@ def create_access_token(data: dict):
 
 def verify_access_token(token: str, credentials_exception):
     try:
-
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         id: int = payload.get("user_id")
         if id is None:
             raise credentials_exception
-        token_data = user_service.TokenData(id=id)
-    
+        token_data = TokenData(id=id)    
     except JWTError:
         raise credentials_exception
 

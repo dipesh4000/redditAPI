@@ -6,7 +6,6 @@ class Post(BaseModel):
     title: str
     content: str
     subreddit: str
-    user: str
 
 
 class PostFull(Post):

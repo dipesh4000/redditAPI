@@ -34,10 +34,10 @@ def get_byid(post_id: int) -> PostFull:
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"DB error: {str(e)}")
 
-def create_post(post: Post) -> PostFull:
+def create_post(post: Post, current_user) -> PostFull:
     try:
         cursor.execute("""INSERT INTO posts (title, content, subreddit, "user") VALUES (%s, %s, %s, %s) RETURNING * """,
-                       (post.title, post.content, post.subreddit, post.user))
+                       (post.title, post.content, post.subreddit, current_user["username"]))
         new_post = cursor.fetchone()
         conn.commit()
         return new_post
@@ -45,9 +45,12 @@ def create_post(post: Post) -> PostFull:
         conn.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"DB error: {str(e)}")
     
-def update_post(post_id:int, updated_value: PostUpdate) -> Post:
+def update_post(post_id: int, updated_value: PostUpdate, current_user) -> Post:
     try:
-        existing_post = dict(get_byid(post_id))  # convert row to dict
+        existing_post = dict(get_byid(post_id))
+
+        if existing_post["user"] != current_user["username"]:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this post")
 
         updates = updated_value.model_dump(exclude_none=True)
         existing_post.update(updates)
@@ -66,12 +69,15 @@ def update_post(post_id:int, updated_value: PostUpdate) -> Post:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"DB error: {str(e)}")
 
 
-def delete_post(post_id: int):
+def delete_post(post_id: int, current_user):
     try:
-        cursor.execute("""DELETE FROM posts WHERE post_id = %s returning *""", (post_id,))
+        existing_post = dict(get_byid(post_id))
+
+        if existing_post["user"] != current_user["username"]:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to delete this post")
+
+        cursor.execute("""DELETE FROM posts WHERE post_id = %s RETURNING *""", (post_id,))
         deleted_post = cursor.fetchone()
-        if deleted_post is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
         conn.commit()
         return deleted_post
     except HTTPException:
