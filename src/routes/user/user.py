@@ -1,6 +1,8 @@
 from fastapi import APIRouter, status, HTTPException
 from src.services import posts_service as posts_service
 from src.pydantic_models import posts_models as posts
+from src.database import psycopg
+
 
 router = APIRouter(
     prefix="/u",
@@ -28,12 +30,17 @@ def update(post_id: int, body: posts.PostUpdate):
 def delete(post_id: int):
     return posts_service.delete_post(post_id)
 
-
-# @router.get('/{id}', response_model=schemas.UserOut)
-# def get_user(id: int, db: Session = Depends(get_db), ):
-#     user = db.query(models.User).filter(models.User.id == id).first()
-#     if not user:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-#                             detail=f"User with id: {id} does not exist")
-
-#     return user     
+cursor = psycopg.cursor
+conn = psycopg.conn
+@router.get('/{username}')
+def get_user(username: str):
+    try:
+        cursor.execute("""SELECT * from posts WHERE user = %s """, (username,))
+        posts = cursor.fetchall()
+        if posts is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        return posts
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"DB error: {str(e)}")  
