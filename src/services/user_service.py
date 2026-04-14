@@ -30,7 +30,9 @@ def create_access_token(data: dict):
 
 def verify_access_token(token: str, credentials_exception):
     try:
+        print("Token received: ", token)
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print("Payload")
         id: int = payload.get("user_id")
         if id is None:
             raise credentials_exception
@@ -39,6 +41,7 @@ def verify_access_token(token: str, credentials_exception):
         raise credentials_exception
 
     return token_data
+#"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyLCJleHAiOjE3NzYxNTIxNTl9.6uc2RJ3-H4B-WhiU94IoYCK5YXvneudR67UFXEwY1hI"
 
 def get_current_user(token: str = Depends(oauth2_scheme)): #it is going to verify that the verify_acess_token's user
     credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,

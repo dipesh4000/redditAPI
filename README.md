@@ -8,6 +8,7 @@ A Reddit-like REST API built with FastAPI and PostgreSQL.
 - Create, update, and delete posts
 - User signup and login with JWT authentication
 - Password hashing with Argon2
+- Protected routes — only the post owner can update or delete their posts
 
 ## Tech Stack
 
@@ -30,7 +31,11 @@ A Reddit-like REST API built with FastAPI and PostgreSQL.
    SECRET_KEY=<your_secret_key>
    ALGORITHM=HS256
    ACCESS_TOKEN_EXPIRE_MINUTES=30
-   DATABASE_URL=<your_postgres_connection_string>
+   DATABASE_HOSTNAME=<your_db_host>
+   DATABASE_NAME=<your_db_name>
+   DATABASE_USERNAME=<your_db_user>
+   DATABASE_PASSWORD=<your_db_password>
+   DATABASE_PORT=<your_db_port>
    ```
 
 3. Run the server:
@@ -38,17 +43,28 @@ A Reddit-like REST API built with FastAPI and PostgreSQL.
    uvicorn src.main:app --reload
    ```
 
+## Authentication
+
+Protected routes require a Bearer token in the `Authorization` header:
+```
+Authorization: Bearer <access_token>
+```
+Obtain the token from `POST /login`.
+
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Get all posts |
-| POST | `/signup` | Register a new user |
-| POST | `/login` | Login and receive JWT token |
-| GET | `/r/latest` | Get 10 latest posts |
-| GET | `/r/{post_id}` | Get post by ID |
-| POST | `/u/post` | Create a post |
-| PUT | `/u/update/{post_id}` | Update a post |
-| DELETE | `/u/delete/{post_id}` | Delete a post |
+| Method | Endpoint | Auth Required | Description |
+|--------|----------|:---:|-------------|
+| GET | `/` | No | Get all posts |
+| POST | `/signup` | No | Register a new user |
+| POST | `/login` | No | Login and receive JWT token |
+| GET | `/r/latest` | No | Get 10 latest posts |
+| GET | `/r/{post_id}` | No | Get post by ID |
+| GET | `/u/{username}` | No | Get all posts by a user |
+| POST | `/u/post` | Yes | Create a post |
+| PUT | `/u/update/{post_id}` | Yes | Update a post (owner only) |
+| DELETE | `/u/delete/{post_id}` | Yes | Delete a post (owner only) |
+
+> `PUT` and `DELETE` return `403 Forbidden` if the authenticated user is not the post owner.
 
 Interactive docs available at `/docs` after running the server.
