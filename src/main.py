@@ -16,11 +16,11 @@ app.include_router(user.router)
 def homepage():
     return posts_service.get_all()
 
-@app.post("/signup")
+@app.post("/signup", response_model=users_models.UserCreated)
 def create_new_user(user: users_models.UserCreate):
     print(user)  # Removed async/await to fix runtime error
     return authservice.create_user(user)
 
 @app.post("/login", response_model=users_models.Token)
-def user_login(user):  # Removed async/await to fix runtime error
+def user_login(user: users_models.UserLogin):  # Removed async/await to fix runtime error
     return authservice.verify_user(user)
