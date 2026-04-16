@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reddit Clone</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo">Reddit Clone</a>
+      <nav id="nav"></nav>
+    </div>
+  </header>
+  <div class="container">
+    <div id="error"></div>
+    <div id="create-post-section"></div>
+    <div class="action-buttons">
+      <button onclick="loadAll()">All Posts</button>
+      <button onclick="loadLatest()">Latest Posts</button>
+    </div>
+    <div id="loading">Loading posts...</div>
+    <div id="posts"></div>
+  </div>
+  <div id="edit-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Post</h3>
+        <span class="close" onclick="closeModal()">&times;</span>
+      </div>
+      <form id="edit-form">
+        <input type="hidden" id="edit-id">
+        <input type="text" id="edit-title" placeholder="Title" required>
+        <textarea id="edit-content" placeholder="Content" required></textarea>
+        <input type="text" id="edit-subreddit" placeholder="Subreddit" required>
+        <button type="submit">Update Post</button>
+      </form>
+    </div>
+  </div>
+  <script type="module">
+    import { loadAllPosts, loadLatestPosts, handleCreatePost, handleUpdatePost, logout } from './script.js';
+    
+    const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
+    
+    const nav = document.getElementById('nav');
+    if (token) {
+      nav.innerHTML = `
+        <a href="profile.html?user=${username}">Profile</a>
+        <button onclick="logoutUser()">Logout</button>
+      `;
+      document.getElementById('create-post-section').innerHTML = `
+        <div class="create-post">
+          <h3>Create Post</h3>
+          <form id="create-form">
+            <input type="text" id="post-title" placeholder="Title" required>
+            <textarea id="post-content" placeholder="Content" required></textarea>
+            <input type="text" id="post-subreddit" placeholder="Subreddit (e.g. r/programming)" required>
+            <button type="submit">Post</button>
+          </form>
+        </div>
+      `;
+      document.getElementById('create-form').addEventListener('submit', handleCreatePost);
+    } else {
+      nav.innerHTML = `
+        <a href="login.html">Login</a>
+        <a href="signup.html">Sign Up</a>
+      `;
+    }
+    
+    window.loadAll = loadAllPosts;
+    window.loadLatest = loadLatestPosts;
+    window.logoutUser = logout;
+    
+    document.getElementById('edit-form').addEventListener('submit', handleUpdatePost);
+    loadAllPosts();
+  </script>
+</body>
+</html>

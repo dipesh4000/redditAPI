@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile - Reddit Clone</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <a href="index.html" class="logo">Reddit Clone</a>
+      <nav id="nav"></nav>
+    </div>
+  </header>
+  <div class="container">
+    <div class="profile-header">
+      <h2 id="profile-username"></h2>
+    </div>
+    <div id="error"></div>
+    <div id="loading">Loading posts...</div>
+    <div id="posts"></div>
+  </div>
+  <div id="edit-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Post</h3>
+        <span class="close" onclick="closeModal()">&times;</span>
+      </div>
+      <form id="edit-form">
+        <input type="hidden" id="edit-id">
+        <input type="text" id="edit-title" placeholder="Title" required>
+        <textarea id="edit-content" placeholder="Content" required></textarea>
+        <input type="text" id="edit-subreddit" placeholder="Subreddit" required>
+        <button type="submit">Update Post</button>
+      </form>
+    </div>
+  </div>
+  <script type="module">
+    import { loadUserPosts, handleUpdatePost, logout } from './script.js';
+    
+    const params = new URLSearchParams(window.location.search);
+    const username = params.get('user');
+    
+    if (!username) {
+      window.location.href = 'index.html';
+    }
+    
+    document.getElementById('profile-username').textContent = `u/${username}`;
+    
+    const token = localStorage.getItem('token');
+    const currentUser = localStorage.getItem('username');
+    
+    const nav = document.getElementById('nav');
+    if (token) {
+      nav.innerHTML = `
+        <a href="profile.html?user=${currentUser}">Profile</a>
+        <button onclick="logoutUser()">Logout</button>
+      `;
+    } else {
+      nav.innerHTML = `
+        <a href="login.html">Login</a>
+        <a href="signup.html">Sign Up</a>
+      `;
+    }
+    
+    window.logoutUser = logout;
+    
+    document.getElementById('edit-form').addEventListener('submit', handleUpdatePost);
+    loadUserPosts(username);
+  </script>
+</body>
+</html>
