@@ -18,6 +18,7 @@ This project provides a simple API for posts and users, including signup/login, 
 
 ## Project Structure
 
+**Backend (`src/`)**
 - `src/main.py` — app initialization, CORS setup, router registration, root endpoints
 - `src/config.py` — environment-backed settings with `pydantic-settings`
 - `src/database/psycopg.py` — PostgreSQL connection pool
@@ -29,14 +30,28 @@ This project provides a simple API for posts and users, including signup/login, 
 - `src/services/posts_service.py` — database operations for posts
 - `src/services/user_service.py` — JWT creation and bearer auth dependency
 
+**Frontend (`frontend/`)**
+- `frontend/index.html` — home page, displays all posts
+- `frontend/login.html` — login page
+- `frontend/signup.html` — signup page
+- `frontend/profile.html` — user profile page with their posts
+- `frontend/api.js` — all API calls to the backend (fetch wrappers)
+- `frontend/script.js` — page-specific UI logic
+- `frontend/style.css` — styling
+
 ## Tech Stack
 
+**Backend**
 - **FastAPI** — web framework
 - **PostgreSQL** + **psycopg2** — database access
 - **PyJWT** — JWT token creation and verification
 - **passlib[argon2]** — password hashing
 - **pydantic** / **pydantic-settings** — validation and environment loading
 - **uvicorn** — development server
+
+**Frontend**
+- Vanilla HTML, CSS, JavaScript (no frameworks)
+- Communicates with the backend via `fetch` calls in `api.js`
 
 ## Setup
 
@@ -61,6 +76,8 @@ This project provides a simple API for posts and users, including signup/login, 
    ```bash
    uvicorn src.main:app --reload
    ```
+
+4. Open the frontend by serving the `frontend/` folder (e.g. with VS Code Live Server or any static file server) and navigate to `index.html`.
 
 ## API Endpoints
 
@@ -93,3 +110,4 @@ Obtain the token by logging in via `POST /login`.
 - The app currently uses open CORS (`*`) for development.
 - `src/database/session.py` and `src/models/models.py` are present as placeholders and are not used by the current SQL-based implementation.
 - Interactive API docs are available at `/docs` once the server is running.
+- The frontend is a simple static UI and is optional — the API works independently and can be tested via `/docs` or any HTTP client (e.g. Postman, curl).
