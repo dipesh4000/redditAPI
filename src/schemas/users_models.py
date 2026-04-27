@@ -12,7 +12,10 @@ class UserCreate(BaseModel):
 class UserCreated(BaseModel):
     username: str
     email: EmailStr
-    created_at: datetime
+    date: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class UserLogin(BaseModel):
